@@ -766,14 +766,21 @@
     async function loadAsientos() {
         const funcionId = document.getElementById('venta-funcion').value;
         if (!funcionId) return;
-        const [entradas, ocupadas] = await Promise.all([
-            getAll(`/funciones/${funcionId}/entradas`),
-            getAll(`/funciones/${funcionId}/entradas-ocupadas`)
-        ]);
-        document.getElementById('venta-asientos').innerHTML = entradas.map(e => {
-            const ocupado = ocupadas.includes(e.id);
-            return `<option value="${e.id}" data-precio="${e.precio}" ${ocupado ? 'disabled' : ''}>${e.asiento} — $${e.precio}${ocupado ? ' (ocupado)' : ''}</option>`;
-        }).join('');
+
+        const entradas = await getAll(`/funciones/${funcionId}/entradas`);
+
+        const select = document.getElementById('venta-asientos');
+        if (!entradas.length) {
+            select.innerHTML = '<option disabled>Esta función no tiene asientos asignados</option>';
+            return;
+        }
+
+        select.innerHTML = entradas.map(e =>
+            `<option value="${e.id}" data-precio="${e.precio}">
+            ${e.asiento} — $${e.precio}
+        </option>`
+        ).join('');
+
         calcularMonto();
     }
 
@@ -965,13 +972,24 @@
     async function saveFuncion() {
         const horario = document.getElementById('funcion-horario').value;
         const peliculaId = parseInt(document.getElementById('funcion-pelicula').value);
-        const salaId = parseInt(document.getElementById('funcion-sala').value);
         if (!horario) return showToast('Seleccioná un horario', true);
-        const funcion = await post('/funciones', { horario, peliculaId, salaId });
+
+        const funcion = await post('/funciones', { horario, peliculaId });
+
+        if (!funcion || !funcion.id) return showToast('Error al crear la función', true);
+
+        const entradasSelect = document.getElementById('funcion-entradas');
+        const entradasSeleccionadas = Array.from(entradasSelect.selectedOptions)
+            .map(opt => parseInt(opt.value));
+
+        for (let entradaId of entradasSeleccionadas) {
+            await post(`/funciones/${funcion.id}/entradas`, { entradaId });
+        }
+
         closeModal('modal-funcion');
         loadFunciones();
-        showToast('Función guardada ✓');
-    }m
+        showToast(`Función guardada con ${entradasSeleccionadas.length} asientos ✓`);
+    }
 
     async function deleteEntrada(id) { await del('/entradas/' + id); loadEntradas(); showToast('Entrada eliminada'); }
 
@@ -1218,9 +1236,6 @@
         loadCines();
         showToast('Cine guardado ✓');
     }
-
-    async function deleteCine(id) { await del('/cines/' + id); loadCines(); showToast('Cine eliminado'); }
-
     loadCartelera();
 </script>
 </body>

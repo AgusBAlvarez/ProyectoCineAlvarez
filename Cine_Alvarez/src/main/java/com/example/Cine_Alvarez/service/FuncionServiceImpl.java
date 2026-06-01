@@ -42,32 +42,12 @@ public class FuncionServiceImpl implements FuncionService {
     @Override
     public Funcion save(Funcion funcion, Integer salaId) {
         Funcion guardada = funcionRepository.save(funcion);
-        Sala sala = salaService.findById(salaId);
-        generarEntradas(guardada, sala.getCapacidad());
-        // asociar la función a la sala
-        sala.getFunciones().add(guardada);
-        salaService.save(sala);
-        return funcionRepository.findById(guardada.getId()).orElse(guardada);
-    }
-
-    /**
-     * Genera entradas automáticamente para una función según la capacidad de la sala.
-     * Los asientos se nombran con letras de fila y número de columna (A1, A2... B1, B2...).
-     * @param funcion la función a la que se le generan entradas
-     * @param capacidad cantidad de asientos a generar
-     */
-    private void generarEntradas(Funcion funcion, int capacidad) {
-        int columnas = 10;
-        for (int i = 0; i < capacidad; i++) {
-            char fila = (char) ('A' + (i / columnas));
-            int columna = (i % columnas) + 1;
-            Entrada entrada = new Entrada();
-            entrada.setAsiento(fila + "" + columna);
-            entrada.setPrecio(1500);
-            Entrada guardada = entradaService.save(entrada);
-            funcion.getEntradas().add(guardada);
+        if (salaId != null) {
+            Sala sala = salaService.findById(salaId);
+            sala.getFunciones().add(guardada);
+            salaService.save(sala);
         }
-        funcionRepository.save(funcion);
+        return funcionRepository.findById(guardada.getId()).orElse(guardada);
     }
 
     @Override
@@ -84,16 +64,16 @@ public class FuncionServiceImpl implements FuncionService {
         funcionRepository.save(funcion);
     }
 
-    @Override
-    public List<Integer> getEntradasOcupadas(Integer funcionId) {
-        return ventaRepository.findAll().stream()
-                .filter(v -> v.getFunciones().stream()
-                        .anyMatch(f -> f.getId().equals(funcionId)))
-                .flatMap(v -> v.getFunciones().stream()
-                        .filter(f -> f.getId().equals(funcionId))
-                        .flatMap(f -> f.getEntradas().stream()))
-                .map(e -> e.getId())
-                .distinct()
-                .toList();
-    }
+//    @Override
+//    public List<Integer> getEntradasOcupadas(Integer funcionId) {
+//        return ventaRepository.findAll().stream()
+//                .filter(v -> v.getFunciones().stream()
+//                        .anyMatch(f -> f.getId().equals(funcionId)))
+//                .flatMap(v -> v.getFunciones().stream()
+//                        .filter(f -> f.getId().equals(funcionId))
+//                        .flatMap(f -> f.getEntradas().stream()))
+//                .map(Entrada::getId)
+//                .distinct()
+//                .toList();
+//    }
 }

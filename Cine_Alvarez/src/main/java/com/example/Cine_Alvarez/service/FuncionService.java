@@ -39,10 +39,10 @@ public interface FuncionService {
      */
     void agregarEntrada(Integer funcionId, Integer entradaId);
 
-    /**
-     * Devuelve los ids de entradas ya vendidas para una función.
-     * @param funcionId id de la función
-     * @return lista de ids de entradas ocupadas
-     */
-    List<Integer> getEntradasOcupadas(Integer funcionId);
+//    /**
+//     * Devuelve los ids de entradas ya vendidas para una función.
+//     * @param funcionId id de la función
+//     * @return lista de ids de entradas ocupadas
+//     */
+//    List<Integer> getEntradasOcupadas(Integer funcionId);
 }

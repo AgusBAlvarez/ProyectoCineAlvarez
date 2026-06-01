@@ -4,6 +4,7 @@ import com.example.Cine_Alvarez.dto.EntradaDTO;
 import com.example.Cine_Alvarez.dto.FuncionDTO;
 import com.example.Cine_Alvarez.dto.FuncionRequestDTO;
 import com.example.Cine_Alvarez.entity.Funcion;
+import com.example.Cine_Alvarez.entity.Pelicula;
 import com.example.Cine_Alvarez.mapper.FuncionMapper;
 import com.example.Cine_Alvarez.service.FuncionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +47,8 @@ public class FuncionController {
     public ResponseEntity<FuncionDTO> save(@RequestBody FuncionRequestDTO body) {
         Funcion funcion = new Funcion();
         funcion.setHorario(java.time.LocalTime.parse(body.getHorario()));
-        com.example.Cine_Alvarez.entity.Pelicula pelicula = new com.example.Cine_Alvarez.entity.Pelicula();
+
+        Pelicula pelicula = new com.example.Cine_Alvarez.entity.Pelicula();
         pelicula.setId(body.getPeliculaId());
         funcion.setPeliculas(pelicula);
         return ResponseEntity.ok(funcionMapper.toDTO(funcionService.save(funcion, body.getSalaId())));
@@ -80,13 +82,13 @@ public class FuncionController {
         return ResponseEntity.ok(funcionMapper.toDTO(funcionService.findById(id)));
     }
 
-    /**
-     * Devuelve los ids de entradas ya vendidas para una función.
-     * @param id id de la función
-     * @return lista de ids ocupados
-     */
-    @GetMapping("/{id}/entradas-ocupadas")
-    public ResponseEntity<List<Integer>> getEntradasOcupadas(@PathVariable Integer id) {
-        return ResponseEntity.ok(funcionService.getEntradasOcupadas(id));
-    }
+//    /**
+//     * Devuelve los ids de entradas ya vendidas para una función.
+//     * @param id id de la función
+//     * @return lista de ids ocupados
+//     */
+//    @GetMapping("/{id}/entradas-ocupadas")
+//    public ResponseEntity<List<Integer>> getEntradasOcupadas(@PathVariable Integer id) {
+//        return ResponseEntity.ok(funcionService.getEntradasOcupadas(id));
+//    }
 }
