@@ -4,8 +4,10 @@ services:
     image: mysql:8.0
     container_name: cine_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ABA123
-      MYSQL_DATABASE: cine_db
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASS: ABA123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "3306:3306"          # opcional: acceso desde tu máquina con DBeaver/MySQL Workbench
     volumes:
