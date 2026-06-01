@@ -1,199 +1,139 @@
--- =============================================
--- 1. CINES
--- =============================================
-INSERT INTO cine (nombre, direccion) VALUES
-                                         ('Cinema Galaxia', 'Av. Corrientes 1234, CABA'),
-                                         ('Cine Olimpo', 'Av. Cabildo 2567, CABA'),
-                                         ('Megaplex Estelar', 'Av. Independencia 987, CABA'),
-                                         ('Cine Capitolio', 'Av. Santa Fe 3456, CABA'),
-                                         ('Cinema Nostalgia', 'Av. Del Libertador 5678, CABA');
+-- ============================================================
+--  init.sql — Datos de prueba para Cine Alvarez
+--  Se ejecuta UNA SOLA VEZ cuando el volumen está vacío.
+--  Hibernate ya crea las tablas (ddl-auto=update),
+--  este archivo solo inserta datos.
+-- ============================================================
 
--- =============================================
--- 2. EMPLEADOS
--- =============================================
-INSERT INTO empleado (nombre, dni) VALUES
-                                       ('Juan Pérez', 30123456),
-                                       ('María Gómez', 35234567),
-                                       ('Carlos López', 40345678),
-                                       ('Ana Martínez', 28456789),
-                                       ('Luis Rodríguez', 31567890);
+-- ─── 1. CINE ─────────────────────────────────────────────────
+INSERT IGNORE INTO cine (id, nombre, direccion) VALUES
+    (1, 'Cine Alvarez', 'Av. San Martín 1234, Neuquén');
 
--- =============================================
--- 3. CLIENTES (incluye VIP)
--- =============================================
-INSERT INTO cliente (dtype, nombre, email, descuento) VALUES
-                                                          ('Cliente', 'Roberto Fernández', 'roberto@email.com', NULL),
-                                                          ('Cliente', 'Laura Díaz', 'laura@email.com', NULL),
-                                                          ('ClienteVIP', 'Sofía Ramírez', 'sofia@email.com', 0.15),
-                                                          ('Cliente', 'Diego Morales', 'diego@email.com', NULL),
-                                                          ('ClienteVIP', 'Elena Castro', 'elena@email.com', 0.20);
+-- ─── 2. EMPLEADOS ────────────────────────────────────────────
+INSERT IGNORE INTO empleado (id, dni, nombre) VALUES
+                                                  (1, 12345678, 'Carlos Rodríguez'),
+                                                  (2, 23456789, 'Ana Gómez'),
+                                                  (3, 34567890, 'Luis Fernández');
 
--- =============================================
--- 4. PAGOS
--- =============================================
-INSERT INTO pago (monto, tipo) VALUES
-                                   (2500.00, 'EFECTIVO'),
-                                   (3750.00, 'TARJETA'),
-                                   (1800.00, 'EFECTIVO'),
-                                   (4200.00, 'TARJETA'),
-                                   (3100.00, 'TARJETA');
+-- ─── 3. CINE ↔ EMPLEADO (tabla join) ────────────────────────
+INSERT IGNORE INTO cine_empleado (cine_id, empleado_id) VALUES
+                                                            (1, 1),
+                                                            (1, 2),
+                                                            (1, 3);
 
--- =============================================
--- 5. PELÍCULAS
--- =============================================
-INSERT INTO pelicula (titulo, genero, cine_id) VALUES
-                                                   ('Dune: Parte 2', 'ACCION', 1),
-                                                   ('Intensamente 2', 'COMEDIA', 1),
-                                                   ('Oppenheimer', 'DRAMA', 2),
-                                                   ('Deadpool 3', 'ACCION', 2),
-                                                   ('Tengo ganas de reír', 'COMEDIA', 3),
-                                                   ('El secreto del faro', 'SUSPENSO', 3);
+-- ─── 4. SALAS (dtype discriminator: 'Sala' o 'SalaVIP') ─────
+-- Salas comunes
+INSERT IGNORE INTO sala (dtype, id, capacidad, beneficios, sala_id) VALUES
+                                                                        ('Sala',    1, 120, NULL, 1),
+                                                                        ('Sala',    2,  90, NULL, 1),
+                                                                        ('Sala',    3,  80, NULL, 1);
 
--- =============================================
--- 6. SALAS
--- =============================================
-INSERT INTO sala (id, capacidad, dtype, beneficios, cine_id) VALUES
-                                                                 (101, 120, 'Sala', NULL, 1),
-                                                                 (102, 80, 'Sala', NULL, 1),
-                                                                 (103, 50, 'SalaVIP', 'Butacas reclinables, servicio de comidas', 1),
-                                                                 (201, 150, 'Sala', NULL, 2),
-                                                                 (202, 60, 'SalaVIP', 'Sonido 7.1, butacas premium', 2),
-                                                                 (301, 100, 'Sala', NULL, 3),
-                                                                 (302, 45, 'SalaVIP', 'Entrada con pochoclo y bebida', 3);
+-- Salas VIP
+INSERT IGNORE INTO sala (dtype, id, capacidad, beneficios, sala_id) VALUES
+                                                                        ('SalaVIP', 4,  30, 'Butacas reclinables + servicio en sala', 1),
+                                                                        ('SalaVIP', 5,  20, 'Butacas premium + snack incluido',       1);
 
--- =============================================
--- 7. FUNCIONES
--- =============================================
-INSERT INTO funcion (horario, pelicula_id) VALUES
-                                               ('14:00:00', 1),
-                                               ('17:30:00', 1),
-                                               ('20:45:00', 1),
-                                               ('15:00:00', 2),
-                                               ('18:30:00', 2),
-                                               ('21:00:00', 3),
-                                               ('16:15:00', 4),
-                                               ('19:00:00', 4),
-                                               ('22:15:00', 5),
-                                               ('16:45:00', 6);
+-- ─── 5. CINE ↔ SALAVIP (tabla join) ─────────────────────────
+INSERT IGNORE INTO cine_salavip (cine_id, salavip_id) VALUES
+                                                          (1, 4),
+                                                          (1, 5);
 
--- =============================================
--- 8. ENTRADAS
--- =============================================
-INSERT INTO entrada (precio, asiento) VALUES
-                                          (1250.00, 'A1'),
-                                          (1250.00, 'A2'),
-                                          (1250.00, 'B5'),
-                                          (1500.00, 'C12'),
-                                          (1250.00, 'D3'),
-                                          (2000.00, 'F7'),
-                                          (1500.00, 'E4'),
-                                          (1250.00, 'G2'),
-                                          (2000.00, 'H1'),
-                                          (1500.00, 'J9');
+-- ─── 6. PELÍCULAS ────────────────────────────────────────────
+-- genero: ACCION | COMEDIA | DRAMA | SUSPENSO
+INSERT IGNORE INTO pelicula (id, titulo, genero, pelicula) VALUES
+                                                               (1, 'Avengers: Endgame',  'ACCION',   1),
+                                                               (2, 'El Padrino',         'DRAMA',    1),
+                                                               (3, 'Inception',          'SUSPENSO', 1),
+                                                               (4, 'La La Land',         'DRAMA',    1),
+                                                               (5, 'Supercool',          'COMEDIA',  1);
 
--- =============================================
--- 9. PROVEEDORES
--- =============================================
-INSERT INTO proveedor (nombre, telefono, direccion) VALUES
-                                                        ('Coca-Cola Andina', '0800-222-2323', 'Av. Libertador 4500, CABA'),
-                                                        ('PepsiCo Argentina', '0800-333-3434', 'Ruta 8 km 35, Pilar'),
-                                                        ('Proveedora Golosinas SRL', '011-4567-8901', 'Av. Belgrano 2345, CABA'),
-                                                        ('Palomitas Don Pepe', '011-5678-9012', 'Calle 50 N° 234, La Plata');
+-- ─── 7. FUNCIONES ────────────────────────────────────────────
+INSERT IGNORE INTO funcion (id, horario, pelicula_id) VALUES
+                                                          (1, '16:00:00', 1),   -- Avengers tarde
+                                                          (2, '20:00:00', 1),   -- Avengers noche
+                                                          (3, '18:00:00', 2),   -- El Padrino tarde
+                                                          (4, '21:00:00', 3),   -- Inception noche
+                                                          (5, '17:00:00', 4),   -- La La Land tarde
+                                                          (6, '19:30:00', 5);   -- Supercool noche
 
--- =============================================
--- 10. COMPRAS (insumos a proveedores)
--- =============================================
-INSERT INTO compra (fecha, proveedor_id, cine_id) VALUES
-                                                      ('2026-05-15', 1, 1),
-                                                      ('2026-05-20', 2, 1),
-                                                      ('2026-05-18', 3, 2),
-                                                      ('2026-05-22', 4, 3),
-                                                      ('2026-05-25', 1, 2);
+-- ─── 8. SALA ↔ FUNCIÓN (tabla join) ─────────────────────────
+INSERT IGNORE INTO sala_funcion (sala_id, funcion_id) VALUES
+                                                          (1, 1),   -- Sala 1 → Avengers tarde
+                                                          (2, 2),   -- Sala 2 → Avengers noche
+                                                          (3, 3),   -- Sala 3 → El Padrino
+                                                          (4, 4),   -- SalaVIP 4 → Inception
+                                                          (5, 5),   -- SalaVIP 5 → La La Land
+                                                          (1, 6);   -- Sala 1 → Supercool
 
--- =============================================
--- 11. INSUMOS
--- =============================================
-INSERT INTO insumo (nombre, precio, compra_id) VALUES
-                                                   ('Gaseosa 500ml', 850.00, 1),
-                                                   ('Gaseosa 1.5L', 1200.00, 1),
-                                                   ('Pochoclo chico', 800.00, 2),
-                                                   ('Pochoclo grande', 1200.00, 2),
-                                                   ('Chocolate barra', 500.00, 3),
-                                                   ('Agua mineral', 700.00, 4),
-                                                   ('Papas fritas', 900.00, 5);
+-- ─── 9. ENTRADAS ─────────────────────────────────────────────
+INSERT IGNORE INTO entrada (id, asiento, precio) VALUES
+                                                     (1,  'A1',  1500.00),
+                                                     (2,  'A2',  1500.00),
+                                                     (3,  'B1',  1500.00),
+                                                     (4,  'B2',  1500.00),
+                                                     (5,  'C1',  2500.00),   -- VIP
+                                                     (6,  'C2',  2500.00),   -- VIP
+                                                     (7,  'D1',  1500.00),
+                                                     (8,  'D2',  1500.00);
 
--- =============================================
--- 12. VENTAS
--- =============================================
-INSERT INTO venta (fecha, pago_id, cine_id) VALUES
-                                                ('2026-05-30', 1, 1),
-                                                ('2026-05-30', 2, 1),
-                                                ('2026-05-30', 3, 2),
-                                                ('2026-05-31', 4, 2),
-                                                ('2026-05-31', 5, 3);
+-- ─── 10. FUNCIÓN ↔ ENTRADA (tabla join) ──────────────────────
+INSERT IGNORE INTO funcion_entrada (funcion_id, entrada_id) VALUES
+                                                                (1, 1), (1, 2),   -- Avengers tarde: 2 entradas
+                                                                (2, 3), (2, 4),   -- Avengers noche: 2 entradas
+                                                                (4, 5), (4, 6),   -- Inception VIP: 2 entradas
+                                                                (3, 7), (3, 8);   -- El Padrino: 2 entradas
 
--- =============================================
--- 13. TABLAS RELACIONALES (N:N)
--- =============================================
+-- ─── 11. CLIENTES ────────────────────────────────────────────
+-- dtype: 'Cliente' o 'ClienteVIP' (ClienteVIP requiere descuento NOT NULL)
+INSERT IGNORE INTO cliente (dtype, id, nombre, email, descuento) VALUES
+                                                                     ('Cliente',    1, 'María López',    'maria@mail.com',   NULL),
+                                                                     ('Cliente',    2, 'Juan Pérez',     'juan@mail.com',    NULL),
+                                                                     ('ClienteVIP', 3, 'Sofía Martínez', 'sofia@mail.com',   0.15),
+                                                                     ('ClienteVIP', 4, 'Diego Torres',   'diego@mail.com',   0.20);
 
--- Cine ↔ SalaVIP
-INSERT INTO cine_sala_vip (cine_id, sala_vip_id) VALUES
-                                                     (1, 103),
-                                                     (2, 202),
-                                                     (3, 302);
+-- ─── 12. PAGOS ───────────────────────────────────────────────
+-- tipo: 0 = EFECTIVO, 1 = TARJETA (tinyint 0-1)
+INSERT IGNORE INTO pago (id, monto, tipo) VALUES
+                                              (1, 3000.00, 0),   -- efectivo
+                                              (2, 5000.00, 1),   -- tarjeta
+                                              (3, 2500.00, 1),   -- tarjeta VIP
+                                              (4, 1500.00, 0);   -- efectivo
 
--- Cine ↔ Empleado
-INSERT INTO cine_empleado (cine_id, empleado_id) VALUES
-                                                     (1, 1),
-                                                     (1, 2),
-                                                     (2, 3),
-                                                     (2, 4),
-                                                     (3, 5),
-                                                     (1, 5);  -- Luis trabaja en dos cines
+-- ─── 13. VENTAS ──────────────────────────────────────────────
+-- venta_id → FK a cine(id)
+INSERT IGNORE INTO venta (id, fecha, pago_id, venta_id) VALUES
+                                                            (1, '2025-05-20', 1, 1),
+                                                            (2, '2025-05-21', 2, 1),
+                                                            (3, '2025-05-22', 3, 1),
+                                                            (4, '2025-05-23', 4, 1);
 
--- Sala ↔ Función
-INSERT INTO sala_funcion (sala_id, funcion_id) VALUES
-                                                   (101, 1),
-                                                   (101, 2),
-                                                   (102, 3),
-                                                   (103, 4),
-                                                   (201, 5),
-                                                   (202, 6),
-                                                   (201, 7),
-                                                   (301, 8),
-                                                   (302, 9),
-                                                   (301, 10);
+-- ─── 14. VENTA ↔ CLIENTE ─────────────────────────────────────
+INSERT IGNORE INTO venta_cliente (venta_id, cliente_id) VALUES
+                                                            (1, 1),   -- María compró en venta 1
+                                                            (2, 2),   -- Juan en venta 2
+                                                            (3, 3),   -- Sofía VIP en venta 3
+                                                            (4, 4);   -- Diego VIP en venta 4
 
--- Función ↔ Entrada
-INSERT INTO funcion_entrada (funcion_id, entrada_id) VALUES
-                                                         (1, 1),
-                                                         (1, 2),
-                                                         (2, 3),
-                                                         (3, 4),
-                                                         (4, 5),
-                                                         (5, 6),
-                                                         (6, 7),
-                                                         (7, 8),
-                                                         (8, 9),
-                                                         (9, 10),
-                                                         (10, 1),
-                                                         (10, 2);
+-- ─── 15. VENTA ↔ FUNCIÓN ─────────────────────────────────────
+INSERT IGNORE INTO venta_funcion (venta_id, funcion_id) VALUES
+                                                            (1, 1),   -- venta 1 → Avengers tarde
+                                                            (2, 2),   -- venta 2 → Avengers noche
+                                                            (3, 4),   -- venta 3 → Inception VIP
+                                                            (4, 3);   -- venta 4 → El Padrino
 
--- Venta ↔ Función
-INSERT INTO venta_funcion (venta_id, funcion_id) VALUES
-                                                     (1, 1),
-                                                     (1, 2),
-                                                     (2, 4),
-                                                     (3, 5),
-                                                     (3, 6),
-                                                     (4, 7),
-                                                     (4, 8),
-                                                     (5, 10);
+-- ─── 16. COMPRAS (del cine a proveedores) ────────────────────
+INSERT IGNORE INTO compra (id, fecha, compra_id) VALUES
+                                                     (1, '2025-05-01 10:00:00', 1),
+                                                     (2, '2025-05-10 11:00:00', 1);
 
--- Venta ↔ Cliente
-INSERT INTO venta_cliente (venta_id, cliente_id) VALUES
-                                                     (1, 1),
-                                                     (2, 3),
-                                                     (3, 2),
-                                                     (4, 4),
-                                                     (5, 5);
+-- ─── 17. PROVEEDORES ─────────────────────────────────────────
+INSERT IGNORE INTO proveedor (id, nombre, direccion, telefono, compra_id) VALUES
+                                                                              (1, 'Snacks SA',      'Calle Falsa 123', '2994001122', 1),
+                                                                              (2, 'Bebidas del Sur','Av. Roca 456',    '2994003344', 2);
+
+-- ─── 18. INSUMOS ─────────────────────────────────────────────
+INSERT IGNORE INTO insumo (id, nombre, precio, compra_id) VALUES
+                                                              (1, 'Pochoclos grandes', 800.00,  1),
+                                                              (2, 'Gaseosa 500ml',     500.00,  1),
+                                                              (3, 'Agua mineral',      300.00,  2),
+                                                              (4, 'Chocolate',         450.00,  2);

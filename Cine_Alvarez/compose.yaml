@@ -1,4 +1,5 @@
 services:
+
   mysql:
     image: mysql:8.0
     container_name: cine_mysql
@@ -6,28 +7,32 @@ services:
       MYSQL_ROOT_PASSWORD: ABA123
       MYSQL_DATABASE: cine_db
     ports:
-      - "3306:3306"
+      - "3306:3306"          # opcional: acceso desde tu máquina con DBeaver/MySQL Workbench
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql          # datos persisten entre reinicios
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # se ejecuta solo la primera vez
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pABA123"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s     # le da tiempo a MySQL de arrancar antes del primer check
 
   app:
     build: .
     container_name: cine_app
     ports:
       - "8080:8080"
-    depends_on:
-      mysql:
-        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/cine_db
+      # Sobreescribimos application.properties desde acá
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/cine_db   # "mysql" = nombre del servicio
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ABA123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      mysql:
+        condition: service_healthy    # espera el healthcheck antes de arrancar
+    restart: on-failure               # si Spring falla al conectar, reintenta
 
 volumes:
   mysql_data:
