@@ -4,17 +4,14 @@ services:
     image: mysql:8.0
     container_name: cine_mysql
     environment:
-      DB_HOST: mysql
-      DB_USER: root
-      DB_PASS: ABA123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      MYSQL_ROOT_PASSWORD: ABA123
+      MYSQL_DATABASE: cine_db
     ports:
-      - "3306:3306"          # opcional: acceso desde tu máquina con DBeaver/MySQL Workbench
+      - "3307:3306"
     volumes:
-      - mysql_data:/var/lib/mysql          # datos persisten entre reinicios
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # se ejecuta solo la primera vez
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pABA123"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pABA123" ]
       interval: 10s
       timeout: 5s
       retries: 5
