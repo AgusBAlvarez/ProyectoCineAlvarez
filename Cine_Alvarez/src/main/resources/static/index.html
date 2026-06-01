@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CinePOP — Sistema de Gestión</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/starred-ticket.png">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --surface2: #1a1a24;
+            --border: #1e1e2e;
+            --accent: #e8c547;
+            --accent2: #ff6b35;
+            --text: #e8e8f0;
+            --muted: #6b6b80;
+            --success: #4ade80;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 230px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
+        .logo { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--accent); padding: 1.75rem 1.5rem 1.5rem; letter-spacing: 3px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .logo span { color: var(--accent2); }
+        .user-badge { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: rgba(232,197,71,0.04); }
+        .user-avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #000; flex-shrink: 0; }
+        .user-name { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+        .user-role { font-size: 0.7rem; color: var(--muted); }
+        nav { padding: 1rem 0; flex: 1; }
+        .nav-section { font-size: 0.6rem; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; padding: 0.75rem 1.5rem 0.4rem; margin-top: 0.5rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1.5rem; cursor: pointer; color: var(--muted); font-size: 0.875rem; transition: all 0.15s; border-left: 3px solid transparent; user-select: none; }
+        .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+        .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(232,197,71,0.06); }
+        .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+        .nav-logout { padding: 1rem 1.5rem; border-top: 1px solid var(--border); }
+        .btn-logout { width: 100%; padding: 0.5rem; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+        .btn-logout:hover { border-color: var(--accent2); color: var(--accent2); }
+        .main { margin-left: 230px; padding: 2.5rem; min-height: 100vh; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+        .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 2px; }
+        .page-subtitle { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+        .cartelera-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+        .funcion-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+        .funcion-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform 0.2s; }
+        .funcion-card:hover { border-color: rgba(232,197,71,0.3); transform: translateY(-2px); }
+        .funcion-card:hover::before { transform: scaleX(1); }
+        .funcion-hora { font-family: 'Bebas Neue', sans-serif; font-size: 2.25rem; color: var(--accent); letter-spacing: 2px; line-height: 1; }
+        .funcion-pelicula { font-size: 1rem; font-weight: 500; margin: 0.5rem 0 0.25rem; color: var(--text); }
+        .funcion-genero { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        .funcion-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; margin-top: 0.75rem; }
+        .badge-accion { background: rgba(255,107,53,0.15); color: var(--accent2); }
+        .badge-comedia { background: rgba(74,222,128,0.12); color: var(--success); }
+        .badge-drama { background: rgba(147,112,219,0.15); color: #a78bfa; }
+        .badge-suspenso { background: rgba(232,197,71,0.12); color: var(--accent); }
+        .table-container { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: rgba(232,197,71,0.06); }
+        th { padding: 0.875rem 1.25rem; text-align: left; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+        td { padding: 0.875rem 1.25rem; border-top: 1px solid var(--border); font-size: 0.875rem; color: var(--text); }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .empty-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.875rem; }
+        .btn { padding: 0.6rem 1.4rem; border: none; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; transition: all 0.15s; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #f0d060; }
+        .btn-danger { background: transparent; color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); }
+        .btn-danger:hover { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+        .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; width: 100%; max-width: 480px; animation: modalIn 0.2s ease; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 1px; margin-bottom: 1.5rem; color: var(--accent); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 1px; }
+        input, select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.65rem 0.9rem; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; transition: border-color 0.15s; }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+        select option { background: var(--surface); }
+        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+        .btn-cancel { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+        .btn-cancel:hover { color: var(--text); border-color: var(--muted); }
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--surface); border: 1px solid var(--accent); color: var(--accent); padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.875rem; opacity: 0; transform: translateY(10px); transition: all 0.25s; z-index: 300; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { border-color: var(--accent2); color: var(--accent2); }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo">CINE<span>POP</span></div>
+    <div class="user-badge" onclick="openModal('modal-perfil')" style="cursor:pointer;" title="Editar perfil">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+            <div class="user-name" id="user-name">—</div>
+            <div class="user-role">Empleado ✏️</div>
+        </div>
+    </div>
+    <nav>
+        <div class="nav-section">Boletería</div>
+        <div class="nav-item active" onclick="showPage('cartelera', this)"><span class="nav-icon">📋</span> Cartelera</div>
+        <div class="nav-item" onclick="showPage('nueva-venta', this)"><span class="nav-icon">💰</span> Nueva Venta</div>
+
+        <div class="nav-section">Administración</div>
+        <div class="nav-item" onclick="showPage('peliculas', this)"><span class="nav-icon">🎬</span> Películas</div>
+        <div class="nav-item" onclick="showPage('funciones', this)"><span class="nav-icon">📽️</span> Funciones</div>
+        <div class="nav-item" onclick="showPage('salas', this)"><span class="nav-icon">🪑</span> Salas</div>
+        <div class="nav-item" onclick="showPage('entradas', this)"><span class="nav-icon">🎟️</span> Entradas</div>
+        <div class="nav-item" onclick="showPage('clientes', this)"><span class="nav-icon">👥</span> Clientes</div>
+        <div class="nav-item" onclick="showPage('empleados', this)"><span class="nav-icon">👤</span> Empleados</div>
+        <div class="nav-item" onclick="showPage('compras', this)"><span class="nav-icon">🛒</span> Compras</div>
+        <div class="nav-item" onclick="showPage('proveedores', this)"><span class="nav-icon">📦</span> Proveedores</div>
+        <div class="nav-item" onclick="showPage('insumos', this)"><span class="nav-icon">📦</span> Insumos</div>
+        <div class="nav-item" onclick="showPage('cines', this)"><span class="nav-icon">🏛️</span> Cines</div>
+    </nav>
+    <div class="nav-logout">
+        <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+    </div>
+</aside>
+
+<main class="main">
+
+    <!-- CARTELERA -->
+    <div class="page active" id="page-cartelera">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Cartelera</h1>
+                <p class="page-subtitle" id="fecha-hoy"></p>
+            </div>
+        </div>
+        <div class="cartelera-grid" id="cartelera-grid">
+            <div style="color:var(--muted);font-size:0.875rem;">Cargando funciones...</div>
+        </div>
+    </div>
+
+    <!-- NUEVA VENTA -->
+    <div class="page" id="page-nueva-venta">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Nueva Venta</h1>
+                <p class="page-subtitle">Registrá una venta de entradas</p>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('modal-venta')">+ Nueva Venta</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Fecha</th><th>Monto</th><th>Tipo Pago</th><th>Cliente</th><th>Horario</th><th>Película</th><th>Asientos</th><th>Acciones</th></tr></thead>
+                <tbody id="tbody-ventas"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PELÍCULAS -->
+    <div class="page" id="page-peliculas">
+        <div class="page-header">
+            <h1 class="page-title">Películas</h1>
+            <button class="btn btn-primary" onclick="openModal('modal-pelicula')">+ Agregar</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Título</th><th>Género</th><th>Acciones</th></tr></thead>
+                <tbody id="tbody-peliculas"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FUNCIONES -->
+    <div class="page" id="page-funciones">
+        <div class="page-header">
+            <h1 class="page-title">Funciones</h1>
+            <button class="btn btn-primary" onclick="openModal('modal-funcion')">+ Agregar</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Horario</th><th>Película</th><th>Género</th><th>Acciones</th></tr></thead>
+                <tbody id="tbody-funciones"><tr><td colspan="5" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SALAS -->
+    <div class="page" id="page-salas">
+        <div class="page-header">
+            <h1 class="page-title">Salas</h1>
+            <button class="btn btn-primary" onclick="openModal('modal-sala')">+ Agregar</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Número</th><th>Capacidad</th><th>Acciones</th></tr></thead>
+                <tbody id="tbody-salas"><tr><td colspan="3" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ENTRADAS -->
+    <div class="page" id="page-entradas">
+        <div class="page-header">
+            <h1 class="page-title">Entradas</h1>
+            <button class="btn btn-primary" onclick="openModal('modal-entrada')">+ Agregar</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Asiento</th><th>Precio</th><th>Acciones</th></tr></thead>
+                <tbody id="tbody-entradas"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div class="page" id="page-clientes">
+        <div class="page-header">
+            <h1 class="page-title">Clientes</h1>
+            <button class="btn btn-primary" onclick="openModal('modal-cliente')">+ Agregar</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Tipo</th><th>Descuento</th><th>Acciones</th></tr></thead>
+                <tbody id="tbody-clientes"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- EMPLEADOS -->
+    <div class="page" id="page-empleados">
+        <div class="page-header">
+            <h1 class="page-title">Empleados</h1>
+            <button class="btn btn-primary" onclick="openModal('modal-empleado')">+ Agregar</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Nombre</th><th>DNI</th></tr></thead>
+                <tbody id="tbody-empleados"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- COMPRAS -->
+    <div class="page" id="page-compras">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Compras</h1>
+                <p class="page-subtitle">Registro de compras de insumos</p>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('modal-compra')">+ Nueva Compra</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Fecha</th><th>Insumos</th><th>Proveedores</th></tr></thead>
+                <tbody id="tbody-compras"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PROVEEDORES -->
+    <div class="page" id="page-proveedores">
+        <div class="page-header">
+            <h1 class="page-title">Proveedores</h1>
+            <button class="btn btn-primary" onclick="openModal('modal-proveedor')">+ Agregar</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr></thead>
+                <tbody id="tbody-proveedores"><tr><td colspan="5" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- INSUMOS -->
+    <div class="page" id="page-insumos">
+        <div class="page-header">
+            <h1 class="page-title">Insumos</h1>
+            <button class="btn btn-primary" onclick="openModal('modal-insumo')">+ Agregar</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Acciones</th></tr></thead>
+                <tbody id="tbody-insumos"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CINES -->
+    <div class="page" id="page-cines">
+        <div class="page-header">
+            <h1 class="page-title">Cines</h1>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ID</th><th>Nombre</th><th>Dirección</th></tr></thead>
+                <tbody id="tbody-cines"><tr><td colspan="4" class="empty-state">Cargando...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- MODALES -->
+
+<div class="modal-overlay" id="modal-pelicula">
+    <div class="modal">
+        <div class="modal-title">Nueva Película</div>
+        <div class="form-group"><label>Título</label><input type="text" id="pelicula-titulo" placeholder="Ej: Inception"></div>
+        <div class="form-group">
+            <label>Género</label>
+            <select id="pelicula-genero">
+                <option value="ACCION">Acción</option>
+                <option value="COMEDIA">Comedia</option>
+                <option value="DRAMA">Drama</option>
+                <option value="SUSPENSO">Suspenso</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-pelicula')">Cancelar</button>
+            <button class="btn btn-primary" onclick="savePelicula()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-funcion">
+    <div class="modal">
+        <div class="modal-title">Nueva Función</div>
+        <div class="form-group"><label>Horario</label><input type="time" id="funcion-horario"></div>
+        <div class="form-group"><label>Película</label><select id="funcion-pelicula"></select></div>
+        <div class="form-group">
+            <label>Entradas (Ctrl+click para seleccionar varias)</label>
+            <select id="funcion-entradas" multiple style="height:120px"></select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-funcion')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveFuncion()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-sala">
+    <div class="modal">
+        <div class="modal-title">Nueva Sala</div>
+        <div class="form-group"><label>Número</label><input type="number" id="sala-numero" placeholder="Ej: 3"></div>
+        <div class="form-group"><label>Capacidad</label><input type="number" id="sala-capacidad" placeholder="Ej: 100"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-sala')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveSala()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-entrada">
+    <div class="modal">
+        <div class="modal-title">Nueva Entrada</div>
+        <div class="form-group"><label>Asiento</label><input type="text" id="entrada-asiento" placeholder="Ej: A1"></div>
+        <div class="form-group"><label>Precio</label><input type="number" id="entrada-precio" placeholder="Ej: 1500"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-entrada')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveEntrada()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-cliente">
+    <div class="modal">
+        <div class="modal-title">Nuevo Cliente</div>
+        <div class="form-group"><label>Nombre</label><input type="text" id="cliente-nombre" placeholder="Ej: Juan Pérez"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="cliente-email" placeholder="Ej: juan@gmail.com"></div>
+        <div class="form-group">
+            <label>Tipo</label>
+            <select id="cliente-tipo" onchange="toggleDescuento()">
+                <option value="normal">Cliente Normal</option>
+                <option value="vip">Cliente VIP</option>
+            </select>
+        </div>
+        <div class="form-group" id="grupo-descuento" style="display:none">
+            <label>Descuento (%) Ej: 10 = 10%</label>
+            <input type="number" id="cliente-descuento" placeholder="Ej: 10" min="0" max="100">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-cliente')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveCliente()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-empleado">
+    <div class="modal">
+        <div class="modal-title">Nuevo Empleado</div>
+        <div class="form-group"><label>Nombre</label><input type="text" id="empleado-nombre" placeholder="Ej: María García"></div>
+        <div class="form-group"><label>DNI</label><input type="number" id="empleado-dni" placeholder="Ej: 38123456"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-empleado')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveEmpleado()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-compra">
+    <div class="modal">
+        <div class="modal-title">Nueva Compra</div>
+        <div class="form-group"><label>Proveedor</label><select id="compra-proveedor"></select></div>
+        <div id="compra-insumos-lista">
+            <div class="form-group" style="display:flex;gap:0.5rem;align-items:center;">
+                <input type="text" placeholder="Nombre insumo" class="insumo-nombre" style="flex:1">
+                <input type="number" placeholder="Precio" class="insumo-precio" style="width:100px">
+            </div>
+        </div>
+        <button class="btn btn-cancel" style="width:100%;margin-bottom:1rem;" onclick="agregarFilaInsumo()">+ Agregar insumo</button>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-compra')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveCompra()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-proveedor">
+    <div class="modal">
+        <div class="modal-title">Nuevo Proveedor</div>
+        <div class="form-group"><label>Nombre</label><input type="text" id="proveedor-nombre" placeholder="Ej: Distribuidora Norte"></div>
+        <div class="form-group"><label>Teléfono</label><input type="text" id="proveedor-telefono" placeholder="Ej: 299-4123456"></div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="proveedor-direccion" placeholder="Ej: Calle 25 de Mayo 100"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-proveedor')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveProveedor()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-insumo">
+    <div class="modal">
+        <div class="modal-title">Nuevo Insumo</div>
+        <div class="form-group"><label>Nombre</label><input type="text" id="insumo-nombre" placeholder="Ej: Pochoclo"></div>
+        <div class="form-group"><label>Precio</label><input type="number" id="insumo-precio" placeholder="Ej: 500"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-insumo')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveInsumo()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-cine">
+    <div class="modal">
+        <div class="modal-title">Nuevo Cine</div>
+        <div class="form-group"><label>Nombre</label><input type="text" id="cine-nombre" placeholder="Ej: Cine Rex"></div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="cine-direccion" placeholder="Ej: Av. Argentina 123"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-cine')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveCine()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-venta">
+    <div class="modal">
+        <div class="modal-title">Nueva Venta</div>
+        <div class="form-group"><label>Función</label><select id="venta-funcion" onchange="loadAsientos()"></select></div>
+        <div class="form-group">
+            <label>Asientos (Ctrl+click para seleccionar varios)</label>
+            <select id="venta-asientos" multiple style="height:120px" onchange="calcularMonto()"></select>
+        </div>
+        <div class="form-group"><label>Monto Total</label><input type="number" id="venta-monto" readonly style="color:var(--accent);cursor:not-allowed;"></div>
+        <div class="form-group">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+                <label style="margin:0">Cliente</label>
+                <button class="btn btn-sm btn-primary" onclick="toggleNuevoCliente()">+ Nuevo</button>
+            </div>
+            <select id="venta-cliente" onchange="mostrarDescuentoCliente()"></select>
+        </div>
+        <div id="form-nuevo-cliente" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1rem;">
+            <div class="form-group"><label>Nombre</label><input type="text" id="venta-cliente-nombre" placeholder="Ej: Juan Pérez"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="venta-cliente-email" placeholder="Ej: juan@gmail.com"></div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="venta-cliente-tipo" onchange="toggleDescuentoVenta()">
+                    <option value="normal">Cliente Normal</option>
+                    <option value="vip">Cliente VIP</option>
+                </select>
+            </div>
+            <div class="form-group" id="venta-grupo-descuento" style="display:none">
+                <label>Descuento (%) Ej: 10 = 10%</label>
+                <input type="number" id="venta-cliente-descuento" placeholder="Ej: 10" min="0" max="100">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="saveClienteDesdeVenta()">Guardar cliente</button>
+        </div>
+        <div id="venta-descuento-info" style="font-size:0.8rem;color:var(--accent);margin-top:0.25rem;display:none;">
+            ⭐ Cliente VIP — se aplicará un <span id="venta-descuento-pct"></span>% de descuento
+        </div>
+        <div class="form-group">
+            <label>Tipo de Pago</label>
+            <select id="venta-tipo">
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA">Tarjeta</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-venta')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveVenta()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-perfil">
+    <div class="modal">
+        <div class="modal-title">Mi Perfil</div>
+        <div class="form-group"><label>Nombre</label><input type="text" id="perfil-nombre"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-perfil')">Cancelar</button>
+            <button class="btn btn-primary" onclick="updatePerfil()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR PELÍCULA -->
+<div class="modal-overlay" id="modal-editar-pelicula">
+    <div class="modal">
+        <div class="modal-title">Editar Película</div>
+        <input type="hidden" id="editar-pelicula-id">
+        <div class="form-group"><label>Título</label><input type="text" id="editar-pelicula-titulo"></div>
+        <div class="form-group">
+            <label>Género</label>
+            <select id="editar-pelicula-genero">
+                <option value="ACCION">Acción</option>
+                <option value="COMEDIA">Comedia</option>
+                <option value="DRAMA">Drama</option>
+                <option value="SUSPENSO">Suspenso</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-editar-pelicula')">Cancelar</button>
+            <button class="btn btn-primary" onclick="updatePelicula()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR SALA -->
+<div class="modal-overlay" id="modal-editar-sala">
+    <div class="modal">
+        <div class="modal-title">Editar Sala</div>
+        <input type="hidden" id="editar-sala-id">
+        <div class="form-group"><label>Capacidad</label><input type="number" id="editar-sala-capacidad"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-editar-sala')">Cancelar</button>
+            <button class="btn btn-primary" onclick="updateSala()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR ENTRADA -->
+<div class="modal-overlay" id="modal-editar-entrada">
+    <div class="modal">
+        <div class="modal-title">Editar Entrada</div>
+        <input type="hidden" id="editar-entrada-id">
+        <div class="form-group"><label>Asiento</label><input type="text" id="editar-entrada-asiento"></div>
+        <div class="form-group"><label>Precio</label><input type="number" id="editar-entrada-precio"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-editar-entrada')">Cancelar</button>
+            <button class="btn btn-primary" onclick="updateEntrada()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR CLIENTE -->
+<div class="modal-overlay" id="modal-editar-cliente">
+    <div class="modal">
+        <div class="modal-title">Editar Cliente</div>
+        <input type="hidden" id="editar-cliente-id">
+        <div class="form-group"><label>Nombre</label><input type="text" id="editar-cliente-nombre"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="editar-cliente-email"></div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal('modal-editar-cliente')">Cancelar</button>
+            <button class="btn btn-primary" onclick="updateCliente()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const empleadoData = sessionStorage.getItem('empleado');
+    if (!empleadoData) window.location.href = 'login.html';
+    const empleado = JSON.parse(empleadoData);
+    document.getElementById('user-name').textContent = empleado.nombre || 'Empleado';
+    document.getElementById('user-avatar').textContent = (empleado.nombre || 'E').charAt(0).toUpperCase();
+    document.getElementById('fecha-hoy').textContent = new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    function logout() { sessionStorage.removeItem('empleado'); window.location.href = 'login.html'; }
+
+    const API = 'http://localhost:8080';
+
+    function showPage(name, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + name).classList.add('active');
+        if (el) el.classList.add('active');
+        loadPage(name);
+    }
+
+    function loadPage(name) {
+        const loaders = {
+            cartelera: loadCartelera,
+            'nueva-venta': loadVentas,
+            peliculas: loadPeliculas,
+            funciones: loadFunciones,
+            salas: loadSalas,
+            entradas: loadEntradas,
+            clientes: loadClientes,
+            empleados: loadEmpleados,
+            compras: loadCompras,
+            proveedores: loadProveedores,
+            insumos: loadInsumos,
+            cines: loadCines,
+        };
+        if (loaders[name]) loaders[name]();
+    }
+
+    function openModal(id) {
+        document.getElementById(id).classList.add('open');
+        if (id === 'modal-funcion') {
+            loadPeliculasSelect();
+            loadEntradasSelect();
+        }
+
+        if (id === 'modal-venta') {
+            loadFuncionesSelect();
+            loadClientesSelect();
+        }
+
+        if (id === 'modal-perfil') {
+            document.getElementById('perfil-nombre').value = empleado.nombre;
+        }
+
+        if (id === 'modal-compra') {
+            loadProveedoresSelect();
+        }
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+    });
+
+    function showToast(msg, error = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast show' + (error ? ' error' : '');
+        setTimeout(() => t.className = 'toast', 2500);
+    }
+
+    async function getAll(endpoint) {
+        try { const res = await fetch(API + endpoint); return await res.json(); }
+        catch(e) { showToast('Error conectando con el servidor', true); return []; }
+    }
+
+    async function post(endpoint, data) {
+        const res = await fetch(API + endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        return res.json();
+    }
+
+    async function del(endpoint) { await fetch(API + endpoint, { method: 'DELETE' }); }
+    function toggleNuevoCliente() {
+        const form = document.getElementById('form-nuevo-cliente');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleDescuentoVenta() {
+        const tipo = document.getElementById('venta-cliente-tipo').value;
+        document.getElementById('venta-grupo-descuento').style.display = tipo === 'vip' ? 'block' : 'none';
+    }
+
+    async function updatePerfil() {
+        const nombre = document.getElementById('perfil-nombre').value.trim();
+        if (!nombre) return showToast('Ingresá un nombre', true);
+
+        const actualizado = await fetch(`${API}/empleados/${empleado.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: empleado.id, nombre, dni: empleado.dni })
+        }).then(r => r.json());
+
+        sessionStorage.setItem('empleado', JSON.stringify(actualizado));
+        document.getElementById('user-name').textContent = actualizado.nombre;
+        document.getElementById('user-avatar').textContent = actualizado.nombre.charAt(0).toUpperCase();
+        closeModal('modal-perfil');
+        showToast('Perfil actualizado ✓');
+    }
+
+    async function saveClienteDesdeVenta() {
+        const nombre = document.getElementById('venta-cliente-nombre').value.trim();
+        const email = document.getElementById('venta-cliente-email').value.trim();
+        const tipo = document.getElementById('venta-cliente-tipo').value;
+        if (!nombre || !email) return showToast('Completá nombre y email', true);
+
+        let body = { nombre, email };
+        if (tipo === 'vip') {
+            const pct = parseFloat(document.getElementById('venta-cliente-descuento').value);
+            if (isNaN(pct)) return showToast('Ingresá un descuento válido', true);
+            body = { ...body, descuento: pct / 100, dtype: 'ClienteVIP' };
+        }
+
+        const nuevo = await post('/clientes', body);
+        await loadClientesSelect();
+
+        // Seleccionar el cliente recién creado
+        document.getElementById('venta-cliente').value = nuevo.id;
+        mostrarDescuentoCliente();
+        calcularMonto();
+
+        // Limpiar y cerrar el formulario
+        document.getElementById('venta-cliente-nombre').value = '';
+        document.getElementById('venta-cliente-email').value = '';
+        document.getElementById('venta-cliente-tipo').value = 'normal';
+        document.getElementById('venta-grupo-descuento').style.display = 'none';
+        document.getElementById('form-nuevo-cliente').style.display = 'none';
+        showToast('Cliente creado ✓');
+    }
+    // CARTELERA
+    async function loadCartelera() {
+        const data = await getAll('/funciones');
+        const grid = document.getElementById('cartelera-grid');
+        if (!data.length) {
+            grid.innerHTML = '<div style="color:var(--muted);font-size:0.875rem;padding:3rem;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;grid-column:1/-1;">No hay funciones programadas</div>';
+            return;
+        }
+        const badgeClass = { 'ACCION': 'badge-accion', 'COMEDIA': 'badge-comedia', 'DRAMA': 'badge-drama', 'SUSPENSO': 'badge-suspenso' };
+        grid.innerHTML = data.map(f => `
+            <div class="funcion-card">
+                <div class="funcion-hora">${f.horario}</div>
+                <div class="funcion-pelicula">${f.pelicula}</div>
+                <div class="funcion-genero">${f.genero}</div>
+                <span class="funcion-badge ${badgeClass[f.genero] || ''}">${f.genero}</span>
+            </div>`).join('');
+    }
+
+    // NUEVA VENTA
+    async function loadVentas() {
+        const data = await getAll('/ventas');
+        document.getElementById('tbody-ventas').innerHTML = !data.length
+            ? '<tr><td colspan="9" class="empty-state">Sin ventas registradas</td></tr>'
+            : data.map(v => `<tr>
+            <td>${v.id}</td>
+            <td>${v.fecha}</td>
+            <td>$${parseFloat(v.monto).toFixed(2)}</td>
+            <td>${v.tipoPago}</td>
+            <td>${v.cliente}</td>
+            <td>${v.funcion}</td>
+            <td>${v.pelicula}</td>
+            <td>${v.asientos}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteVenta(${v.id})">Eliminar</button></td>
+          </tr>`).join('');
+    }
+
+    async function deleteVenta(id) {
+        const confirmar = confirm('¿Estás seguro que querés eliminar esta venta? Esta acción no se puede deshacer.');
+        if (!confirmar) return;
+        await del('/ventas/' + id);
+        loadVentas();
+        showToast('Venta eliminada');
+    }
+
+    async function loadFuncionesSelect() {
+        const data = await getAll('/funciones');
+        document.getElementById('venta-funcion').innerHTML =
+            data.map(f => `<option value="${f.id}">${f.horario} — ${f.pelicula}</option>`).join('');
+        await loadAsientos();
+    }
+
+    async function loadAsientos() {
+        const funcionId = document.getElementById('venta-funcion').value;
+        if (!funcionId) return;
+        const [entradas, ocupadas] = await Promise.all([
+            getAll(`/funciones/${funcionId}/entradas`),
+            getAll(`/funciones/${funcionId}/entradas-ocupadas`)
+        ]);
+        document.getElementById('venta-asientos').innerHTML = entradas.map(e => {
+            const ocupado = ocupadas.includes(e.id);
+            return `<option value="${e.id}" data-precio="${e.precio}" ${ocupado ? 'disabled' : ''}>${e.asiento} — $${e.precio}${ocupado ? ' (ocupado)' : ''}</option>`;
+        }).join('');
+        calcularMonto();
+    }
+
+    function calcularMonto() {
+        const selected = [...document.getElementById('venta-asientos').selectedOptions];
+        const subtotal = selected.reduce((sum, opt) => sum + parseFloat(opt.dataset.precio), 0);
+
+        const clienteSelect = document.getElementById('venta-cliente');
+        const opt = clienteSelect.selectedOptions[0];
+        const esVip = opt && opt.dataset.vip === 'true';
+        const descuento = esVip ? parseFloat(opt.dataset.descuento) : 0;
+
+        const total = subtotal * (1 - descuento);
+        document.getElementById('venta-monto').value = total.toFixed(2);
+    }
+
+    async function loadClientesSelect() {
+        const data = await getAll('/clientes');
+        document.getElementById('venta-cliente').innerHTML =
+            data.map(c => `<option value="${c.id}" data-vip="${c.vip}" data-descuento="${c.descuento}">${c.nombre}${c.vip ? ' ⭐' : ''}</option>`).join('');
+        document.getElementById('venta-cliente').addEventListener('change', mostrarDescuentoCliente);
+        mostrarDescuentoCliente();
+    }
+
+    function mostrarDescuentoCliente() {
+        const select = document.getElementById('venta-cliente');
+        const opt = select.selectedOptions[0];
+        const info = document.getElementById('venta-descuento-info');
+        if (opt && opt.dataset.vip === 'true') {
+            document.getElementById('venta-descuento-pct').textContent = (parseFloat(opt.dataset.descuento) * 100).toFixed(0);
+            info.style.display = 'block';
+        } else {
+            info.style.display = 'none';
+        }
+        calcularMonto();
+    }
+
+    async function saveVenta() {
+        const funcionId = parseInt(document.getElementById('venta-funcion').value);
+        const clienteId = parseInt(document.getElementById('venta-cliente').value);
+        const monto = parseFloat(document.getElementById('venta-monto').value);
+        const tipo = document.getElementById('venta-tipo').value;
+        const cine = JSON.parse(sessionStorage.getItem('cine'));
+
+        if (!monto) return showToast('Seleccioná al menos un asiento', true);
+
+        const pago = await post('/pagos', { monto, tipo });
+        const venta = await post('/ventas', { pago: { id: pago.id }, cineId: cine.id });
+        await post(`/ventas/${venta.id}/funciones`, { funcionId });
+        await post(`/ventas/${venta.id}/clientes`, { clienteId });
+
+        closeModal('modal-venta');
+        loadVentas();
+        showToast('Venta registrada ✓');
+    }
+
+    // PELÍCULAS
+    async function loadPeliculas() {
+        const data = await getAll('/peliculas');
+        document.getElementById('tbody-peliculas').innerHTML = !data.length
+            ? '<tr><td colspan="4" class="empty-state">Sin películas registradas</td></tr>'
+            : data.map(p => `<tr><td>${p.id}</td><td>${p.titulo}</td><td>${p.genero}</td><td>
+                <button class="btn btn-sm btn-primary" onclick="openEditarPelicula(${p.id},'${p.titulo}','${p.genero}')">Editar</button>
+                <button class="btn btn-danger btn-sm" onclick="deletePelicula(${p.id})">Eliminar</button>
+            </td></tr>`).join('')
+    }
+
+    async function savePelicula() {
+        const titulo = document.getElementById('pelicula-titulo').value.trim();
+        const genero = document.getElementById('pelicula-genero').value;
+        if (!titulo) return showToast('Ingresá un título', true);
+        await post('/peliculas', { titulo, genero });
+        closeModal('modal-pelicula');
+        document.getElementById('pelicula-titulo').value = '';
+        loadPeliculas();
+        showToast('Película guardada ✓');
+    }
+
+    async function deletePelicula(id) { await del('/peliculas/' + id); loadPeliculas(); showToast('Película eliminada'); }
+
+    async function loadPeliculasSelect() {
+        const data = await getAll('/peliculas');
+        document.getElementById('funcion-pelicula').innerHTML = data.map(p => `<option value="${p.id}">${p.titulo}</option>`).join('');
+    }
+
+    function openEditarPelicula(id, titulo, genero) {
+        document.getElementById('editar-pelicula-id').value = id;
+        document.getElementById('editar-pelicula-titulo').value = titulo;
+        document.getElementById('editar-pelicula-genero').value = genero;
+        openModal('modal-editar-pelicula');
+    }
+
+    async function updatePelicula() {
+        const id = document.getElementById('editar-pelicula-id').value;
+        const titulo = document.getElementById('editar-pelicula-titulo').value.trim();
+        const genero = document.getElementById('editar-pelicula-genero').value;
+        if (!titulo) return showToast('Ingresá un título', true);
+        await fetch(`${API}/peliculas/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo, genero })
+        });
+        closeModal('modal-editar-pelicula');
+        loadPeliculas();
+        showToast('Película actualizada ✓');
+    }
+
+    // FUNCIONES
+    async function loadFunciones() {
+        const data = await getAll('/funciones');
+        document.getElementById('tbody-funciones').innerHTML = !data.length
+            ? '<tr><td colspan="5" class="empty-state">Sin funciones registradas</td></tr>'
+            : data.map(f => `<tr><td>${f.id}</td><td>${f.horario}</td><td>${f.pelicula}</td><td>${f.genero}</td><td><button class="btn btn-danger btn-sm" onclick="deleteFuncion(${f.id})">Eliminar</button></td></tr>`).join('');
+    }
+
+    async function deleteFuncion(id) { await del('/funciones/' + id); loadFunciones(); showToast('Función eliminada'); }
+
+    // SALAS
+    async function loadSalas() {
+        const data = await getAll('/salas');
+        document.getElementById('tbody-salas').innerHTML = !data.length
+            ? '<tr><td colspan="3" class="empty-state">Sin salas registradas</td></tr>'
+            : data.map(s => `<tr><td>${s.id}</td><td>${s.capacidad}</td><td>
+                <button class="btn btn-sm btn-primary" onclick="openEditarSala(${s.id},${s.capacidad})">Editar</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteSala(${s.id})">Eliminar</button>
+            </td></tr>`).join('')
+    }
+
+    async function saveSala() {
+        const numero = document.getElementById('sala-numero').value;
+        const capacidad = document.getElementById('sala-capacidad').value;
+        if (!numero || !capacidad) return showToast('Completá todos los campos', true);
+        await post('/salas', { id: parseInt(numero), capacidad: parseInt(capacidad) });
+        closeModal('modal-sala');
+        document.getElementById('sala-numero').value = '';
+        document.getElementById('sala-capacidad').value = '';
+        loadSalas();
+        showToast('Sala guardada ✓');
+    }
+
+    async function deleteSala(id) { await del('/salas/' + id); loadSalas(); showToast('Sala eliminada'); }
+
+    function openEditarSala(id, capacidad) {
+        document.getElementById('editar-sala-id').value = id;
+        document.getElementById('editar-sala-capacidad').value = capacidad;
+        openModal('modal-editar-sala');
+    }
+
+    async function updateSala() {
+        const id = document.getElementById('editar-sala-id').value;
+        const capacidad = parseInt(document.getElementById('editar-sala-capacidad').value);
+        if (!capacidad) return showToast('Ingresá una capacidad', true);
+        await fetch(`${API}/salas/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ capacidad })
+        });
+        closeModal('modal-editar-sala');
+        loadSalas();
+        showToast('Sala actualizada ✓');
+    }
+
+    // ENTRADAS
+    async function loadEntradas() {
+        const data = await getAll('/entradas');
+        document.getElementById('tbody-entradas').innerHTML = !data.length
+            ? '<tr><td colspan="4" class="empty-state">Sin entradas registradas</td></tr>'
+            : data.map(e => `<tr><td>${e.id}</td><td>${e.asiento}</td><td>$${e.precio}</td><td><button class="btn btn-danger btn-sm" onclick="deleteEntrada(${e.id})">Eliminar</button></td></tr>`).join('');
+    }
+
+    async function loadEntradasSelect() {
+        const data = await getAll('/entradas');
+        document.getElementById('funcion-entradas').innerHTML =
+            data.map(e => `<option value="${e.id}">${e.asiento} — $${e.precio}</option>`).join('');
+    }
+
+    async function saveEntrada() {
+        const asiento = document.getElementById('entrada-asiento').value.trim();
+        const precio = document.getElementById('entrada-precio').value;
+        if (!asiento || !precio) return showToast('Completá todos los campos', true);
+        await post('/entradas', { asiento, precio: parseFloat(precio) });
+        closeModal('modal-entrada');
+        document.getElementById('entrada-asiento').value = '';
+        document.getElementById('entrada-precio').value = '';
+        loadEntradas();
+        showToast('Entrada guardada ✓');
+    }
+
+    async function saveFuncion() {
+        const horario = document.getElementById('funcion-horario').value;
+        const peliculaId = parseInt(document.getElementById('funcion-pelicula').value);
+        const salaId = parseInt(document.getElementById('funcion-sala').value);
+        if (!horario) return showToast('Seleccioná un horario', true);
+        const funcion = await post('/funciones', { horario, peliculaId, salaId });
+        closeModal('modal-funcion');
+        loadFunciones();
+        showToast('Función guardada ✓');
+    }m
+
+    async function deleteEntrada(id) { await del('/entradas/' + id); loadEntradas(); showToast('Entrada eliminada'); }
+
+    function openEditarEntrada(id, asiento, precio) {
+        document.getElementById('editar-entrada-id').value = id;
+        document.getElementById('editar-entrada-asiento').value = asiento;
+        document.getElementById('editar-entrada-precio').value = precio;
+        openModal('modal-editar-entrada');
+    }
+
+    async function updateEntrada() {
+        const id = document.getElementById('editar-entrada-id').value;
+        const asiento = document.getElementById('editar-entrada-asiento').value.trim();
+        const precio = parseFloat(document.getElementById('editar-entrada-precio').value);
+        if (!asiento || !precio) return showToast('Completá todos los campos', true);
+        await fetch(`${API}/entradas/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ asiento, precio })
+        });
+        closeModal('modal-editar-entrada');
+        loadEntradas();
+        showToast('Entrada actualizada ✓');
+    }
+
+    // CLIENTES
+    async function loadClientes() {
+        const data = await getAll('/clientes');
+        document.getElementById('tbody-clientes').innerHTML = !data.length
+            ? '<tr><td colspan="5" class="empty-state">Sin clientes registrados</td></tr>'
+            : data.map(c => `<tr>
+                <td>${c.id}</td><td>${c.nombre}</td><td>${c.email}</td>
+                <td>${c.vip ? '⭐ VIP' : 'Normal'}</td>
+                <td>${c.vip ? (c.descuento * 100).toFixed(0) + '%' : '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="openEditarCliente(${c.id},'${c.nombre}','${c.email}')">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCliente(${c.id})">Eliminar</button>
+                </td>
+            </tr>`).join('')
+    }
+
+    function toggleDescuento() {
+        const tipo = document.getElementById('cliente-tipo').value;
+        document.getElementById('grupo-descuento').style.display = tipo === 'vip' ? 'block' : 'none';
+    }
+
+    async function saveCliente() {
+        const nombre = document.getElementById('cliente-nombre').value.trim();
+        const email = document.getElementById('cliente-email').value.trim();
+        const tipo = document.getElementById('cliente-tipo').value;
+        if (!nombre || !email) return showToast('Completá todos los campos', true);
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) return showToast('Ingresá un email válido', true);
+
+        if (tipo === 'vip') {
+            const descuentoPct = parseFloat(document.getElementById('cliente-descuento').value);
+            if (isNaN(descuentoPct)) return showToast('Ingresá un descuento válido', true);
+            await post('/clientes', { nombre, email, descuento: descuentoPct / 100, dtype: 'ClienteVIP' });
+        } else {
+            await post('/clientes', { nombre, email });
+        }
+
+        closeModal('modal-cliente');
+        document.getElementById('cliente-nombre').value = '';
+        document.getElementById('cliente-email').value = '';
+        document.getElementById('cliente-tipo').value = 'normal';
+        document.getElementById('grupo-descuento').style.display = 'none';
+        loadClientes();
+        showToast('Cliente guardado ✓');
+    }
+
+    async function deleteCliente(id) { await del('/clientes/' + id); loadClientes(); showToast('Cliente eliminado'); }
+
+    function openEditarCliente(id, nombre, email) {
+        document.getElementById('editar-cliente-id').value = id;
+        document.getElementById('editar-cliente-nombre').value = nombre;
+        document.getElementById('editar-cliente-email').value = email;
+        openModal('modal-editar-cliente');
+    }
+
+    async function updateCliente() {
+        const id = document.getElementById('editar-cliente-id').value;
+        const nombre = document.getElementById('editar-cliente-nombre').value.trim();
+        const email = document.getElementById('editar-cliente-email').value.trim();
+        if (!nombre || !email) return showToast('Completá todos los campos', true);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) return showToast('Ingresá un email válido', true);
+        await fetch(`${API}/clientes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, email })
+        });
+        closeModal('modal-editar-cliente');
+        loadClientes();
+        showToast('Cliente actualizado ✓');
+    }
+
+    // EMPLEADOS
+    async function loadEmpleados() {
+        const data = await getAll('/empleados');
+        document.getElementById('tbody-empleados').innerHTML = !data.length
+            ? '<tr><td colspan="3" class="empty-state">Sin empleados registrados</td></tr>'
+            : data.map(e => `<tr><td>${e.id}</td><td>${e.nombre}</td><td>${e.dni}</td></tr>`).join('');
+    }
+
+    async function saveEmpleado() {
+        const nombre = document.getElementById('empleado-nombre').value.trim();
+        const dni = document.getElementById('empleado-dni').value;
+        if (!nombre || !dni) return showToast('Completá todos los campos', true);
+        await post('/empleados', { nombre, dni: parseInt(dni) });
+        closeModal('modal-empleado');
+        document.getElementById('empleado-nombre').value = '';
+        document.getElementById('empleado-dni').value = '';
+        loadEmpleados();
+        showToast('Empleado guardado ✓');
+    }
+
+    async function deleteEmpleado(id) { await del('/empleados/' + id); loadEmpleados(); showToast('Empleado eliminado'); }
+
+    // COMPRAS
+    async function loadCompras() {
+        const data = await getAll('/compras');
+        document.getElementById('tbody-compras').innerHTML = !data.length
+            ? '<tr><td colspan="4" class="empty-state">Sin compras registradas</td></tr>'
+            : data.map(c => `<tr>
+            <td>${c.id}</td>
+            <td>${new Date(c.fecha).toLocaleDateString('es-AR')}</td>
+            <td>${c.insumos.join(', ')}</td>
+            <td>${c.proveedores.join(', ')}</td>
+          </tr>`).join('');
+    }
+
+    async function loadInsumosSelect() {
+        const data = await getAll('/insumos');
+        document.getElementById('compra-insumos').innerHTML =
+            data.map(i => `<option value="${i.id}">${i.nombre} — $${i.precio}</option>`).join('');
+    }
+
+    async function loadProveedoresSelect() {
+        const data = await getAll('/proveedores');
+        document.getElementById('compra-proveedor').innerHTML =
+            data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+    }
+
+    function agregarFilaInsumo() {
+        const lista = document.getElementById('compra-insumos-lista');
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.style = 'display:flex;gap:0.5rem;align-items:center;';
+        div.innerHTML = `<input type="text" placeholder="Nombre insumo" class="insumo-nombre" style="flex:1">
+                     <input type="number" placeholder="Precio" class="insumo-precio" style="width:100px">`;
+        lista.appendChild(div);
+    }
+
+    async function saveCompra() {
+        const proveedorId = parseInt(document.getElementById('compra-proveedor').value);
+        const cine = JSON.parse(sessionStorage.getItem('cine'));
+
+        const nombres = [...document.querySelectorAll('.insumo-nombre')].map(i => i.value.trim());
+        const precios = [...document.querySelectorAll('.insumo-precio')].map(i => parseFloat(i.value));
+
+        if (nombres.some(n => !n) || precios.some(p => isNaN(p)))
+            return showToast('Completá todos los insumos', true);
+
+        const compra = await post('/compras', { cineId: cine.id });
+
+        for (let i = 0; i < nombres.length; i++) {
+            const insumo = await post('/insumos', { nombre: nombres[i], precio: precios[i] });
+            await post(`/compras/${compra.id}/insumos`, { insumoId: insumo.id });
+        }
+
+        await post(`/compras/${compra.id}/proveedores`, { proveedorId });
+
+        // limpiar filas extra
+        const lista = document.getElementById('compra-insumos-lista');
+        lista.innerHTML = `<div class="form-group" style="display:flex;gap:0.5rem;align-items:center;">
+        <input type="text" placeholder="Nombre insumo" class="insumo-nombre" style="flex:1">
+        <input type="number" placeholder="Precio" class="insumo-precio" style="width:100px">
+    </div>`;
+
+        closeModal('modal-compra');
+        loadCompras();
+        showToast('Compra registrada ✓');
+    }
+
+    // PROVEEDORES
+    async function loadProveedores() {
+        const data = await getAll('/proveedores');
+        document.getElementById('tbody-proveedores').innerHTML = !data.length
+            ? '<tr><td colspan="5" class="empty-state">Sin proveedores registrados</td></tr>'
+            : data.map(p => `<tr><td>${p.id}</td><td>${p.nombre}</td><td>${p.telefono}</td><td>${p.direccion}</td><td><button class="btn btn-danger btn-sm" onclick="deleteProveedor(${p.id})">Eliminar</button></td></tr>`).join('');
+    }
+
+    async function saveProveedor() {
+        const nombre = document.getElementById('proveedor-nombre').value.trim();
+        const telefono = document.getElementById('proveedor-telefono').value.trim();
+        const direccion = document.getElementById('proveedor-direccion').value.trim();
+        if (!nombre || !telefono || !direccion) return showToast('Completá todos los campos', true);
+        await post('/proveedores', { nombre, telefono, direccion });
+        closeModal('modal-proveedor');
+        loadProveedores();
+        showToast('Proveedor guardado ✓');
+    }
+
+    async function deleteProveedor(id) { await del('/proveedores/' + id); loadProveedores(); showToast('Proveedor eliminado'); }
+
+    // INSUMOS
+    async function loadInsumos() {
+        const data = await getAll('/insumos');
+        document.getElementById('tbody-insumos').innerHTML = !data.length
+            ? '<tr><td colspan="4" class="empty-state">Sin insumos registrados</td></tr>'
+            : data.map(i => `<tr><td>${i.id}</td><td>${i.nombre}</td><td>$${i.precio}</td><td><button class="btn btn-danger btn-sm" onclick="deleteInsumo(${i.id})">Eliminar</button></td></tr>`).join('');
+    }
+
+    async function saveInsumo() {
+        const nombre = document.getElementById('insumo-nombre').value.trim();
+        const precio = document.getElementById('insumo-precio').value;
+        if (!nombre || !precio) return showToast('Completá todos los campos', true);
+        await post('/insumos', { nombre, precio: parseFloat(precio) });
+        closeModal('modal-insumo');
+        document.getElementById('insumo-nombre').value = '';
+        document.getElementById('insumo-precio').value = '';
+        loadInsumos();
+        showToast('Insumo guardado ✓');
+    }
+
+    async function deleteInsumo(id) { await del('/insumos/' + id); loadInsumos(); showToast('Insumo eliminado'); }
+
+    // CINES
+    async function loadCines() {
+        const data = await getAll('/cines');
+        document.getElementById('tbody-cines').innerHTML = !data.length
+            ? '<tr><td colspan="3" class="empty-state">Sin cines registrados</td></tr>'
+            : data.map(c => `<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.direccion}</td></tr>`).join('');
+    }
+
+    async function saveCine() {
+        const nombre = document.getElementById('cine-nombre').value.trim();
+        const direccion = document.getElementById('cine-direccion').value.trim();
+        if (!nombre || !direccion) return showToast('Completá todos los campos', true);
+        await post('/cines', { nombre, direccion });
+        closeModal('modal-cine');
+        loadCines();
+        showToast('Cine guardado ✓');
+    }
+
+    async function deleteCine(id) { await del('/cines/' + id); loadCines(); showToast('Cine eliminado'); }
+
+    loadCartelera();
+</script>
+</body>
+</html>

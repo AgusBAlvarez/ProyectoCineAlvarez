@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cine Administracion - Login</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/starred-ticket.png">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --border: #1e1e2e;
+            --accent: #e8c547;
+            --accent2: #ff6b35;
+            --text: #e8e8f0;
+            --muted: #6b6b80;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            margin-bottom: 0.25rem;
+        }
+
+        .logo span { color: var(--accent2); }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.65rem 0.9rem;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        input:focus { outline: none; border-color: var(--accent); }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #f0d060; }
+
+        .error {
+            color: var(--accent2);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            min-height: 1.2rem;
+        }
+    </style>
+    <script>
+        async function login() {
+            const nombre = document.getElementById('nombre').value;
+            const dni = document.getElementById('dni').value;
+
+            if (!nombre || !dni) {
+                document.getElementById('error').textContent = 'Completá todos los campos';
+                return;
+            }
+
+            const empleados = await fetch('http://localhost:8080/empleados').then(r => r.json());
+            const empleado = empleados.find(e => e.nombre === nombre && e.dni == dni);
+
+            if (empleado) {
+                const cine = await fetch(`http://localhost:8080/cines/by-empleado/${empleado.id}`).then(r => r.json());
+                sessionStorage.setItem('empleado', JSON.stringify(empleado));
+                sessionStorage.setItem('cine', JSON.stringify(cine));
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('error').textContent = 'Credenciales incorrectas';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">CINE<span>POP</span></div>
+        <p class="subtitle">Sistema de gestión - Empleados</p>
+
+        <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="nombre" placeholder="Tu nombre">
+        </div>
+
+        <div class="form-group">
+            <label>DNI</label>
+            <input type="number" id="dni" placeholder="Tu DNI">
+        </div>
+
+        <button class="btn btn-primary" onclick="login()">Ingresar</button>
+        <p class="error" id="error"></p>
+    </div>
+</body>
+</html>
